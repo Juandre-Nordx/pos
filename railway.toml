@@ -1,0 +1,15 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "backend/Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[deploy.env]
+ENVIRONMENT = "production"
+DEFAULT_CURRENCY = "ZAR"
+DEFAULT_LOCALE = "en-ZA"
+DEFAULT_TIMEZONE = "Africa/Johannesburg"

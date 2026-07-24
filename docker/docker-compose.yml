@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nordxpos-postgres
+    environment:
+      POSTGRES_USER: nordxpos
+      POSTGRES_PASSWORD: nordxpos
+      POSTGRES_DB: nordxpos
+    ports:
+      - "5432:5432"
+    volumes:
+      - nordxpos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nordxpos -d nordxpos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: nordxpos-backend
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://nordxpos:nordxpos@postgres:5432/nordxpos
+      UPLOAD_DIR: /data/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - nordxpos_uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: nordxpos-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  nordxpos_pgdata:
+  nordxpos_uploads:
