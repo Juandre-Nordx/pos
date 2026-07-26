@@ -22,16 +22,16 @@ class Settings(BaseSettings):
     port: int = 8000
     cors_origins: str = "http://localhost:5173"
 
-   database_url: str = Field(
-    default="postgresql+asyncpg://nordxpos:nordxpos@localhost:5432/nordxpos"
+    database_url: str = Field(
+        default="postgresql+asyncpg://nordxpos:nordxpos@localhost:5432/nordxpos"
     )
 
-@field_validator("database_url", mode="before")
-@classmethod
-def fix_database_url(cls, value: str) -> str:
-    if value and value.startswith("postgresql://"):
-        return value.replace("postgresql://", "postgresql+asyncpg://", 1)
-    return value
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_database_url(cls, value: str) -> str:
+        if value and value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return value
 
     secret_key: str = Field(min_length=32)
     jwt_algorithm: str = "HS256"
