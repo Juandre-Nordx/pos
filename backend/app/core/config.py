@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
    database_url: str = Field(
     default="postgresql+asyncpg://nordxpos:nordxpos@localhost:5432/nordxpos"
-)
+    )
 
 @field_validator("database_url", mode="before")
 @classmethod
