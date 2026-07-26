@@ -3,13 +3,18 @@ FROM python:3.13-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    libpq-dev \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
+# Copy only the Python project first for better layer caching
+COPY backend/pyproject.toml ./
+
+# Install your application and dependencies
 RUN pip install --no-cache-dir .
 
-COPY . .
+# Copy the rest of the backend source
+COPY backend/ ./
 
 RUN mkdir -p /data/uploads
 
