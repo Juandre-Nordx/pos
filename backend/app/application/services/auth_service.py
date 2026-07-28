@@ -49,6 +49,12 @@ class AuthService:
         user = result.scalar_one_or_none()
 
         if user is None or not verify_password(password, user.password_hash):
+            logger.warning(
+                "login_failed",
+                email=email.lower(),
+                ip_address=ip_address,
+                reason="invalid_credentials",
+            )
             self.session.add(
                 LoginHistory(
                     email=email.lower(),
@@ -62,6 +68,13 @@ class AuthService:
             raise UnauthorizedException("Invalid email or password")
 
         if not user.is_active:
+            logger.warning(
+                "login_failed",
+                user_uuid=str(user.uuid),
+                email=user.email,
+                ip_address=ip_address,
+                reason="account_inactive",
+            )
             raise UnauthorizedException("Account is inactive")
 
         user.last_login_at = datetime.now(UTC)

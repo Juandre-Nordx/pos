@@ -1,6 +1,24 @@
 import type { Client, Dashboard, PPECompliance, PPEIssue, PPEItem, Product, ResponseEnvelope, User } from '../types/api';
 
-const API_PREFIX = import.meta.env.VITE_API_URL ?? '/api/v1';
+const RAILWAY_FRONTEND_HOST = 'pos-frontend-production.up.railway.app';
+const RAILWAY_BACKEND_URL = 'https://pos-production-62cf5.up.railway.app/api/v1';
+
+function getApiPrefix() {
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, '');
+  }
+
+  // The production frontend and backend are separate Railway services, so a
+  // relative URL would send POST requests to Caddy on the frontend service.
+  if (window.location.hostname === RAILWAY_FRONTEND_HOST) {
+    return RAILWAY_BACKEND_URL;
+  }
+
+  return '/api/v1';
+}
+
+const API_PREFIX = getApiPrefix();
 const TOKEN_KEY = 'nordxpos.access_token';
 const REFRESH_KEY = 'nordxpos.refresh_token';
 
@@ -20,15 +38,56 @@ export function clearTokens() {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getStoredToken();
-  const response = await fetch(`${API_PREFIX}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-  const envelope = (await response.json()) as ResponseEnvelope<T>;
+  const method = options.method ?? 'GET';
+  const startedAt = performance.now();
+  console.info('[API] Request started', { method, path });
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_PREFIX}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    console.error('[API] Request could not reach the backend', { method, path, error });
+    throw new Error('Unable to reach the server. Please try again.');
+  }
+
+  const requestLog = {
+    method,
+    path,
+    status: response.status,
+    duration_ms: Math.round(performance.now() - startedAt),
+  };
+  if (response.ok) {
+    console.info('[API] Request completed', requestLog);
+  } else {
+    console.error('[API] Request failed', requestLog);
+  }
+
+  const responseBody = await response.text();
+  if (!responseBody.trim()) {
+    throw new Error(
+      response.ok
+        ? 'The server returned an empty response'
+        : `Request failed with ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
+    );
+  }
+
+  let envelope: ResponseEnvelope<T>;
+  try {
+    envelope = JSON.parse(responseBody) as ResponseEnvelope<T>;
+  } catch {
+    throw new Error(
+      response.ok
+        ? 'The server returned an invalid response'
+        : `Request failed with ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
+    );
+  }
 
   if (!response.ok || envelope.errors?.length) {
     throw new Error(envelope.errors?.join(', ') || `Request failed with ${response.status}`);

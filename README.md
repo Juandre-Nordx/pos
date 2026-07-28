@@ -54,6 +54,24 @@ NordxPOS/
 GET /health
 ```
 
+## Railway deployment
+
+The production frontend and backend run as separate Railway services. Configure
+the frontend service with:
+
+```text
+VITE_API_URL=https://pos-production-62cf5.up.railway.app/api/v1
+```
+
+Configure the backend service to allow the frontend origin:
+
+```text
+CORS_ORIGINS=https://pos-frontend-production.up.railway.app
+```
+
+`VITE_API_URL` is embedded during the Vite build, so redeploy the frontend after
+changing it. Never include `/auth/login` in this value; it must end at `/api/v1`.
+
 ## License
 
 Proprietary — NordxPOS. All rights reserved.

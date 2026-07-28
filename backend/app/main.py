@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
+from time import perf_counter
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -16,6 +19,7 @@ from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal
 from app.core.exceptions import AppException
 from app.core.logging import setup_logging
+from app.core.security import decode_token
 from app.schemas.common import HealthResponse, ResponseEnvelope
 
 settings = get_settings()
@@ -59,6 +63,51 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
+def authenticated_user_uuid(request: Request) -> str | None:
+    authorization = request.headers.get("authorization", "")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        return None
+    try:
+        return decode_token(token, settings).get("sub")
+    except ValueError:
+        return None
+
+
+@app.middleware("http")
+async def log_user_changes(request: Request, call_next):
+    """Log login and data-changing requests without recording request bodies or tokens."""
+    if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        return await call_next(request)
+
+    started_at = perf_counter()
+    log_context = {
+        "method": request.method,
+        "path": request.url.path,
+        "user_uuid": authenticated_user_uuid(request),
+        "ip_address": request.client.host if request.client else None,
+    }
+    logger.info("user_change_started", **log_context)
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception(
+            "user_change_failed",
+            **log_context,
+            duration_ms=round((perf_counter() - started_at) * 1000),
+        )
+        raise
+
+    log_method = logger.info if response.status_code < 400 else logger.warning
+    log_method(
+        "user_change_completed",
+        **log_context,
+        status_code=response.status_code,
+        duration_ms=round((perf_counter() - started_at) * 1000),
+    )
+    return response
+
+
 @app.exception_handler(AppException)
 async def app_exception_handler(_: Request, exc: AppException) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content={"data": None, "errors": [exc.detail]})
@@ -74,3 +123,11 @@ async def health_check() -> ResponseEnvelope[HealthResponse]:
             timestamp=datetime.now(UTC),
         )
     )
+
+
+# Mount this after the API and health routes so the SPA cannot intercept API
+# requests. The directory is included in production images and intentionally
+# optional for backend-only local development and tests.
+frontend_directory = Path(__file__).resolve().parents[1] / "static"
+if frontend_directory.is_dir():
+    app.mount("/", StaticFiles(directory=frontend_directory, html=True), name="frontend")
