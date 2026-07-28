@@ -28,7 +28,26 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   });
-  const envelope = (await response.json()) as ResponseEnvelope<T>;
+
+  const responseBody = await response.text();
+  if (!responseBody.trim()) {
+    throw new Error(
+      response.ok
+        ? 'The server returned an empty response'
+        : `Request failed with ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
+    );
+  }
+
+  let envelope: ResponseEnvelope<T>;
+  try {
+    envelope = JSON.parse(responseBody) as ResponseEnvelope<T>;
+  } catch {
+    throw new Error(
+      response.ok
+        ? 'The server returned an invalid response'
+        : `Request failed with ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
+    );
+  }
 
   if (!response.ok || envelope.errors?.length) {
     throw new Error(envelope.errors?.join(', ') || `Request failed with ${response.status}`);
