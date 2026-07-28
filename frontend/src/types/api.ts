@@ -104,6 +104,14 @@ export type Product = {
   updated_at: string;
 };
 
+export type StockAddition = {
+  product_uuid: string;
+  warehouse_name: string;
+  quantity_before: number;
+  quantity_added: number;
+  quantity_after: number;
+};
+
 export type PPECompliance = {
   total_issued: number;
   overdue_replacements: number;

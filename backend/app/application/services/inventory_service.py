@@ -4,9 +4,19 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundException
-from app.infrastructure.database.models.inventory import Product, WarehouseStock
+from app.infrastructure.database.models.inventory import (
+    Product,
+    StockMovement,
+    Warehouse,
+    WarehouseStock,
+)
 from app.schemas.common import PaginationMeta
-from app.schemas.inventory import ProductDetailResponse, ProductListItem
+from app.schemas.inventory import (
+    ProductDetailResponse,
+    ProductListItem,
+    StockAdditionRequest,
+    StockAdditionResponse,
+)
 
 
 class InventoryService:
@@ -23,13 +33,14 @@ class InventoryService:
         return result.scalar_one()
 
     async def list_products(
-        self, *, page: int = 1, per_page: int = 25, search: str | None = None, low_stock_only: bool = False
+        self,
+        *,
+        page: int = 1,
+        per_page: int = 25,
+        search: str | None = None,
+        low_stock_only: bool = False,
     ) -> tuple[list[ProductListItem], PaginationMeta]:
-        query = (
-            select(Product)
-            .where(Product.is_deleted.is_(False))
-            .order_by(Product.name)
-        )
+        query = select(Product).where(Product.is_deleted.is_(False)).order_by(Product.name)
         if search:
             pattern = f"%{search}%"
             query = query.where(Product.name.ilike(pattern) | Product.sku.ilike(pattern))
@@ -65,7 +76,12 @@ class InventoryService:
         total = len(items)
         start = (page - 1) * per_page
         paginated = items[start : start + per_page]
-        meta = PaginationMeta(page=page, per_page=per_page, total=total, total_pages=max(1, math.ceil(total / per_page)))
+        meta = PaginationMeta(
+            page=page,
+            per_page=per_page,
+            total=total,
+            total_pages=max(1, math.ceil(total / per_page)),
+        )
         return paginated, meta
 
     async def get_product(self, product_uuid: str) -> ProductDetailResponse:
@@ -94,4 +110,69 @@ class InventoryService:
             description=product.description,
             supplier_name=product.supplier.name if product.supplier else None,
             track_serial=product.track_serial,
+        )
+
+    async def add_stock(
+        self, product_uuid: str, payload: StockAdditionRequest, user_id: int
+    ) -> StockAdditionResponse:
+        product_result = await self.session.execute(
+            select(Product).where(Product.uuid == product_uuid, Product.is_deleted.is_(False))
+        )
+        product = product_result.scalar_one_or_none()
+        if product is None:
+            raise NotFoundException("Product not found")
+
+        warehouse_result = await self.session.execute(
+            select(Warehouse)
+            .where(Warehouse.is_deleted.is_(False))
+            .order_by(Warehouse.is_default.desc(), Warehouse.id)
+            .limit(1)
+        )
+        warehouse = warehouse_result.scalar_one_or_none()
+        if warehouse is None:
+            raise NotFoundException("No inventory warehouse is configured")
+
+        stock_result = await self.session.execute(
+            select(WarehouseStock)
+            .where(
+                WarehouseStock.product_id == product.id,
+                WarehouseStock.warehouse_id == warehouse.id,
+                WarehouseStock.is_deleted.is_(False),
+            )
+            .with_for_update()
+        )
+        stock = stock_result.scalar_one_or_none()
+        if stock is None:
+            stock = WarehouseStock(
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+                quantity=0,
+                reserved_quantity=0,
+                created_by=user_id,
+            )
+            self.session.add(stock)
+
+        quantity_before = stock.quantity
+        stock.quantity += payload.quantity
+        stock.updated_by = user_id
+        self.session.add(
+            StockMovement(
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+                movement_type="stock_receipt",
+                quantity_before=quantity_before,
+                quantity_changed=payload.quantity,
+                quantity_after=stock.quantity,
+                reason=payload.reason,
+                reference=payload.reference,
+                created_by=user_id,
+            )
+        )
+        await self.session.flush()
+        return StockAdditionResponse(
+            product_uuid=str(product.uuid),
+            warehouse_name=warehouse.name,
+            quantity_before=quantity_before,
+            quantity_added=payload.quantity,
+            quantity_after=stock.quantity,
         )

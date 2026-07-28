@@ -1,7 +1,19 @@
 from app.infrastructure.database.models.client import Client, ClientAddress, ClientContact
 from app.infrastructure.database.models.employee import Department, Employee
-from app.infrastructure.database.models.inventory import Product, ProductCategory, Supplier, Warehouse, WarehouseStock
-from app.infrastructure.database.models.ppe import PPECategory, PPEEmployeeIssue, PPEInspection, PPEItem
+from app.infrastructure.database.models.inventory import (
+    Product,
+    ProductCategory,
+    StockMovement,
+    Supplier,
+    Warehouse,
+    WarehouseStock,
+)
+from app.infrastructure.database.models.ppe import (
+    PPECategory,
+    PPEEmployeeIssue,
+    PPEInspection,
+    PPEItem,
+)
 from app.infrastructure.database.models.user import (
     AuditLog,
     CompanySettings,
@@ -33,6 +45,7 @@ __all__ = [
     "RefreshToken",
     "Role",
     "RolePermission",
+    "StockMovement",
     "Supplier",
     "User",
     "UserRole",

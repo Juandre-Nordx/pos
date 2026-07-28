@@ -9,7 +9,12 @@ from app.core.database import get_db_session
 from app.core.dependencies import require_permission
 from app.infrastructure.database.models.user import User
 from app.schemas.common import ResponseEnvelope
-from app.schemas.inventory import ProductDetailResponse, ProductListItem
+from app.schemas.inventory import (
+    ProductDetailResponse,
+    ProductListItem,
+    StockAdditionRequest,
+    StockAdditionResponse,
+)
 
 router = APIRouter(prefix="/inventory/products", tags=["Inventory"])
 
@@ -39,3 +44,15 @@ async def get_product(
     service = InventoryService(session)
     product = await service.get_product(str(product_uuid))
     return ResponseEnvelope(data=product)
+
+
+@router.post("/{product_uuid}/stock", response_model=ResponseEnvelope[StockAdditionResponse])
+async def add_stock(
+    product_uuid: UUID,
+    payload: StockAdditionRequest,
+    user: Annotated[User, Depends(require_permission("inventory:write"))],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> ResponseEnvelope[StockAdditionResponse]:
+    service = InventoryService(session)
+    movement = await service.add_stock(str(product_uuid), payload, user.id)
+    return ResponseEnvelope(data=movement)

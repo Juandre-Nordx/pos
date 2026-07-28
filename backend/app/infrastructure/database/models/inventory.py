@@ -1,7 +1,16 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.database.base import AuditMixin, Base
@@ -70,8 +79,12 @@ class WarehouseStock(Base, AuditMixin):
     __tablename__ = "warehouse_stock"
     __table_args__ = (UniqueConstraint("warehouse_id", "product_id", name="uq_warehouse_product"),)
 
-    warehouse_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE"))
-    product_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("products.id", ondelete="CASCADE"))
+    warehouse_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("warehouses.id", ondelete="CASCADE")
+    )
+    product_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("products.id", ondelete="CASCADE")
+    )
     quantity: Mapped[int] = mapped_column(Integer, default=0)
     reserved_quantity: Mapped[int] = mapped_column(Integer, default=0)
 
@@ -81,3 +94,19 @@ class WarehouseStock(Base, AuditMixin):
     @property
     def available_quantity(self) -> int:
         return self.quantity - self.reserved_quantity
+
+
+class StockMovement(Base, AuditMixin):
+    __tablename__ = "stock_movements"
+
+    product_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("products.id"), index=True)
+    warehouse_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("warehouses.id"), index=True)
+    movement_type: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    quantity_before: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity_changed: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity_after: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    reference: Mapped[str | None] = mapped_column(String(100))
+
+    product: Mapped["Product"] = relationship()
+    warehouse: Mapped["Warehouse"] = relationship()

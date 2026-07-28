@@ -34,3 +34,17 @@ class ProductCreateRequest(BaseSchema):
     selling_price: Decimal = Decimal("0.00")
     min_stock_level: int = 0
     unit_of_measure: str = "each"
+
+
+class StockAdditionRequest(BaseSchema):
+    quantity: int = Field(gt=0, le=1_000_000)
+    reason: str = Field(min_length=3, max_length=500)
+    reference: str | None = Field(default=None, max_length=100)
+
+
+class StockAdditionResponse(BaseSchema):
+    product_uuid: str
+    warehouse_name: str
+    quantity_before: int
+    quantity_added: int
+    quantity_after: int
