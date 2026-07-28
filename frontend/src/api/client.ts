@@ -1,4 +1,4 @@
-import type { Client, Dashboard, PPECompliance, PPEIssue, PPEItem, Product, ResponseEnvelope, User } from '../types/api';
+import type { Client, CompanySettings, Dashboard, PPECompliance, PPEIssue, PPEItem, Product, ResponseEnvelope, User } from '../types/api';
 
 const RAILWAY_FRONTEND_HOST = 'pos-frontend-production.up.railway.app';
 const RAILWAY_BACKEND_URL = 'https://pos-production-62cf5.up.railway.app/api/v1';
@@ -117,4 +117,9 @@ export const api = {
   ppeCompliance: () => request<PPECompliance>('/ppe/compliance'),
   ppeItems: () => request<PPEItem[]>('/ppe/items'),
   ppeIssues: () => request<PPEIssue[]>('/ppe/issues'),
+  companySettings: () => request<CompanySettings | null>('/settings/company'),
+  updateCompanySettings: (settings: CompanySettings) => request<CompanySettings>('/settings/company', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  }),
 };

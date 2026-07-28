@@ -23,6 +23,27 @@ export type User = {
   roles: string[];
 };
 
+export type CompanyAddress = {
+  street: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  country: string;
+};
+
+export type CompanySettings = {
+  uuid?: string;
+  company_name: string;
+  trading_name?: string | null;
+  registration_number?: string | null;
+  vat_number?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  address: CompanyAddress;
+  logo_url?: string | null;
+};
+
 export type DashboardMetric = {
   label: string;
   value: string | number;
