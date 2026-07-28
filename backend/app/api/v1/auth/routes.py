@@ -15,6 +15,14 @@ logger = structlog.get_logger()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+def get_request_ip(request: Request) -> str | None:
+    """Return the original client IP when the app is behind Railway's proxy."""
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",", maxsplit=1)[0].strip() or None
+    return request.client.host if request.client else None
+
+
 @router.post("/login", response_model=ResponseEnvelope[TokenResponse])
 async def login(
     payload: LoginRequest,
@@ -22,14 +30,26 @@ async def login(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ResponseEnvelope[TokenResponse]:
+    ip_address = get_request_ip(request)
+    logger.info(
+        "login_attempt",
+        email=payload.email.lower(),
+        ip_address=ip_address,
+        user_agent=request.headers.get("user-agent"),
+    )
     service = AuthService(session, settings)
     user, access_token, refresh_token = await service.login(
         payload.email,
         payload.password,
-        ip_address=request.client.host if request.client else None,
+        ip_address=ip_address,
         user_agent=request.headers.get("user-agent"),
     )
-    logger.info("login_success", user_uuid=str(user.uuid))
+    logger.info(
+        "login_success",
+        user_uuid=str(user.uuid),
+        email=user.email,
+        ip_address=ip_address,
+    )
     return ResponseEnvelope(
         data=TokenResponse(access_token=access_token, refresh_token=refresh_token)
     )

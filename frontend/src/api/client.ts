@@ -70,6 +70,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const responseBody = await response.text();
+  if (response.status === 405 && path === '/auth/login') {
+    throw new Error(
+      'Login reached the frontend service instead of the API. Set VITE_API_URL to the backend URL and redeploy the frontend.',
+    );
+  }
   if (!responseBody.trim()) {
     throw new Error(
       response.ok

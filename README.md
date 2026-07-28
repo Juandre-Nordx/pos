@@ -72,6 +72,12 @@ CORS_ORIGINS=https://pos-frontend-production.up.railway.app
 `VITE_API_URL` is embedded during the Vite build, so redeploy the frontend after
 changing it. Never include `/auth/login` in this value; it must end at `/api/v1`.
 
+After redeploying, a login request must appear in the **backend** service's
+network logs as `POST /api/v1/auth/login` (not in the frontend service). Backend
+deploy logs emit structured `login_attempt`, `login_success`, and `login_failed`
+events. These events include the normalized email and original client IP but
+never the submitted password or authorization token.
+
 ## License
 
 Proprietary — NordxPOS. All rights reserved.
