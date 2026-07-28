@@ -21,7 +21,12 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     cors_origins: str = (
-        "http://localhost:5173,https://pos-frontend-production.up.railway.app"
+        "http://localhost:5173,"
+        "https://pos-frontend-production.up.railway.app,"
+        "https://pos-forntend-production.up.railway.app"
+    )
+    cors_origin_regex: str = (
+        r"https://pos-(?:frontend|forntend)-production\.up\.railway\.app"
     )
 
     database_url: str = Field(
