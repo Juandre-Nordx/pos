@@ -54,7 +54,7 @@ SYSTEM_ROLES: dict[str, list[str]] = {
         "dashboard:read", "clients:read", "employees:read",
     ],
     "manager": [
-        "dashboard:read", "clients:read", "clients:write", "inventory:read",
+        "dashboard:read", "clients:read", "clients:write", "inventory:read", "inventory:write",
         "business_cases:read", "business_cases:approve", "trip_requests:read", "trip_requests:approve",
         "employees:read", "ppe:read",
     ],

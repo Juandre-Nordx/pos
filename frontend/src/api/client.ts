@@ -1,4 +1,4 @@
-import type { Client, CompanySettings, Dashboard, PPECompliance, PPEIssue, PPEItem, Product, ResponseEnvelope, User } from '../types/api';
+import type { Client, CompanySettings, Dashboard, PPECompliance, PPEItem, Product, ResponseEnvelope, StockAddition, User } from '../types/api';
 
 const RAILWAY_FRONTEND_HOST = 'pos-frontend-production.up.railway.app';
 const RAILWAY_BACKEND_URL = 'https://pos-production-62cf5.up.railway.app/api/v1';
@@ -112,11 +112,15 @@ export const api = {
   me: () => request<User>('/auth/me'),
   dashboard: () => request<Dashboard>('/dashboard'),
   clients: (search = '') => request<Client[]>(`/clients?per_page=8${search ? `&search=${encodeURIComponent(search)}` : ''}`),
-  products: (search = '', lowStockOnly = false) =>
-    request<Product[]>(`/inventory/products?per_page=10&low_stock_only=${lowStockOnly}${search ? `&search=${encodeURIComponent(search)}` : ''}`),
+  products: (search = '', lowStockOnly = false, perPage = 10) =>
+    request<Product[]>(`/inventory/products?per_page=${perPage}&low_stock_only=${lowStockOnly}${search ? `&search=${encodeURIComponent(search)}` : ''}`),
   ppeCompliance: () => request<PPECompliance>('/ppe/compliance'),
   ppeItems: () => request<PPEItem[]>('/ppe/items'),
-  ppeIssues: () => request<PPEIssue[]>('/ppe/issues'),
+  addStock: (productUuid: string, quantity: number, reason: string, reference?: string) =>
+    request<StockAddition>(`/inventory/products/${productUuid}/stock`, {
+      method: 'POST',
+      body: JSON.stringify({ quantity, reason, reference: reference || null }),
+    }),
   companySettings: () => request<CompanySettings | null>('/settings/company'),
   updateCompanySettings: (settings: CompanySettings) => request<CompanySettings>('/settings/company', {
     method: 'PUT',
