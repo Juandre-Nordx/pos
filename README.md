@@ -66,8 +66,13 @@ VITE_API_URL=https://pos-production-62cf5.up.railway.app/api/v1
 Configure the backend service to allow the frontend origin:
 
 ```text
-CORS_ORIGINS=https://pos-frontend-production.up.railway.app
+CORS_ORIGINS=https://pos-frontend-production.up.railway.app,https://pos-forntend-production.up.railway.app
 ```
+
+The second hostname preserves the spelling of the currently deployed Railway
+frontend domain. A browser preflight (`OPTIONS /api/v1/auth/login`) returning
+HTTP 400 means its exact origin is missing from `CORS_ORIGINS`; update the
+backend variable and redeploy the backend before testing login again.
 
 `VITE_API_URL` is embedded during the Vite build, so redeploy the frontend after
 changing it. Never include `/auth/login` in this value; it must end at `/api/v1`.
