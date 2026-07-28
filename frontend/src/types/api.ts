@@ -112,6 +112,25 @@ export type StockAddition = {
   quantity_after: number;
 };
 
+export type SupplierContact = {
+  uuid?: string; full_name: string; job_title?: string | null; department?: string | null;
+  email?: string | null; phone?: string | null; alternative_phone?: string | null;
+  preferred_contact_method: 'email' | 'phone' | 'sms'; is_primary: boolean; notes?: string | null;
+};
+
+export type Supplier = {
+  uuid: string; name: string; code: string; contact_person?: string | null;
+  contact_email?: string | null; phone?: string | null; city?: string | null;
+  country?: string | null; is_active: boolean; contact_count?: number;
+  created_at: string; updated_at: string;
+};
+
+export type SupplierCreate = {
+  name: string; code: string; contact_person?: string; contact_email?: string;
+  phone?: string; city?: string; country?: string; payment_terms_days: number;
+  lead_time_days: number; is_active: boolean; contacts: SupplierContact[];
+};
+
 export type PPECompliance = {
   total_issued: number;
   overdue_replacements: number;

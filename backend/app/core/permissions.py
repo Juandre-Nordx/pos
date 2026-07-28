@@ -4,6 +4,10 @@ SYSTEM_PERMISSIONS: list[tuple[str, str, str]] = [
     ("clients", "write", "Manage clients"),
     ("inventory", "read", "View inventory"),
     ("inventory", "write", "Manage inventory"),
+    ("suppliers", "read", "View suppliers"),
+    ("suppliers", "create", "Create suppliers"),
+    ("suppliers", "update", "Edit and deactivate suppliers"),
+    ("suppliers", "financial", "View supplier financial information"),
     ("ppe", "read", "View PPE records"),
     ("ppe", "write", "Manage PPE issuance"),
     ("finance", "read", "View finance"),
@@ -30,7 +34,8 @@ SYSTEM_ROLES: dict[str, list[str]] = {
         "ppe:read", "ppe:write", "finance:read", "finance:write", "quotes:read", "quotes:write",
         "invoices:read", "invoices:write", "users:read", "audit:read",
         "business_cases:read", "business_cases:approve", "trip_requests:read", "trip_requests:approve",
-        "employees:read", "employees:write",
+        "employees:read", "employees:write", "suppliers:read", "suppliers:create",
+        "suppliers:update", "suppliers:financial",
     ],
     "finance": [
         "dashboard:read", "clients:read", "inventory:read", "finance:read", "finance:write",
@@ -42,7 +47,7 @@ SYSTEM_ROLES: dict[str, list[str]] = {
     ],
     "store": [
         "dashboard:read", "inventory:read", "inventory:write", "ppe:read", "ppe:write",
-        "business_cases:read",
+        "business_cases:read", "suppliers:read",
     ],
     "technician": [
         "dashboard:read", "clients:read", "inventory:read", "ppe:read", "employees:read",
@@ -57,6 +62,7 @@ SYSTEM_ROLES: dict[str, list[str]] = {
         "dashboard:read", "clients:read", "clients:write", "inventory:read", "inventory:write",
         "business_cases:read", "business_cases:approve", "trip_requests:read", "trip_requests:approve",
         "employees:read", "ppe:read",
+        "suppliers:read", "suppliers:create", "suppliers:update", "suppliers:financial",
     ],
 }
 

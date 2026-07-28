@@ -6,6 +6,7 @@ from app.api.v1.dashboard.routes import router as dashboard_router
 from app.api.v1.inventory.routes import router as inventory_router
 from app.api.v1.ppe.routes import router as ppe_router
 from app.api.v1.settings.routes import router as settings_router
+from app.api.v1.suppliers.routes import router as suppliers_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)
@@ -14,3 +15,4 @@ api_router.include_router(clients_router)
 api_router.include_router(inventory_router)
 api_router.include_router(ppe_router)
 api_router.include_router(settings_router)
+api_router.include_router(suppliers_router)
