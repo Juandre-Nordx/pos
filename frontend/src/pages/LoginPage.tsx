@@ -15,11 +15,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     event.preventDefault();
     setLoading(true);
     setError('');
+    console.info('[Auth] Login attempt started', { email });
     try {
       const tokens = await login(email, password);
       storeTokens(tokens.access_token, tokens.refresh_token);
+      console.info('[Auth] Login succeeded', { email });
       onLogin();
     } catch (err) {
+      console.error('[Auth] Login failed', { email, error: err instanceof Error ? err.message : err });
       setError(err instanceof Error ? err.message : 'Unable to sign in');
     } finally {
       setLoading(false);
