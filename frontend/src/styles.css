@@ -34,6 +34,7 @@ body { background: #f1f5f9; }
 .pill.danger { background: #fee2e2; color: #991b1b; }
 .nav-link { display: block; width: 100%; border-radius: 1rem; background: transparent; padding: .75rem 1rem; color: #cbd5e1; text-align: left; }
 .nav-link:hover, .nav-link.active { background: rgba(255,255,255,.1); color: white; }
+.nav-section { margin: 1.5rem .9rem .25rem; color: #64748b; font-size: .68rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .stock-page { display: grid; gap: 1.25rem; }
 .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .page-heading h2 { margin: .3rem 0; font-size: 1.75rem; }
@@ -48,6 +49,7 @@ td small { display: block; margin-top: .2rem; color: #64748b; }
 .error-notice { background: #fef2f2; color: #b91c1c; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow-y: auto; background: rgba(15,23,42,.55); padding: 1rem; }
 .stock-dialog { width: min(100%, 32rem); border-radius: 1.4rem; background: white; padding: 1.5rem; box-shadow: 0 25px 50px rgba(15,23,42,.3); }
+.supplier-dialog { width: min(100%, 46rem); }
 .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
 .dialog-heading h3 { margin: .3rem 0 0; font-size: 1.4rem; }
 .close-button { width: 2.4rem; height: 2.4rem; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 1.4rem; }

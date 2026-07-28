@@ -5,6 +5,7 @@ import { CompanySettingsForm } from './components/CompanySettingsForm';
 import { StatCard } from './components/StatCard';
 import { LoginPage } from './pages/LoginPage';
 import { StockPage } from './pages/StockPage';
+import { SuppliersPage } from './pages/SuppliersPage';
 import type { Client, CompanySettings, Dashboard, PPECompliance, PPEItem, Product, User } from './types/api';
 import './styles.css';
 
@@ -80,20 +81,22 @@ function App() {
         <nav className="mt-10 space-y-2 text-sm font-medium text-slate-300">
           <button className={page === 'dashboard' ? 'nav-link active' : 'nav-link'} onClick={() => navigate('dashboard')}>Dashboard</button>
           <button className={page === 'stock' ? 'nav-link active' : 'nav-link'} onClick={() => navigate('stock')}>Stock</button>
+          <p className="nav-section">Suppliers</p>
+          <button className={page === 'suppliers' ? 'nav-link active' : 'nav-link'} onClick={() => navigate('suppliers')}>All suppliers</button>
         </nav>
         <button className="mt-auto flex items-center gap-2 rounded-2xl px-4 py-3 text-left text-sm text-slate-300 hover:bg-white/10" onClick={() => { clearTokens(); setToken(null); }}><span aria-hidden="true">↩</span> Sign out</button>
       </aside>
       <main className="lg:pl-72">
         <header className="app-header">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="header-title"><button className="menu-button" aria-label="Open navigation" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>☰</button><div><p className="text-sm text-slate-500">Welcome back{user ? `, ${user.first_name}` : ''}</p><h2 className="text-2xl font-bold">{page === 'stock' ? 'Inventory' : 'Operations dashboard'}</h2></div></div>
+            <div className="header-title"><button className="menu-button" aria-label="Open navigation" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>☰</button><div><p className="text-sm text-slate-500">Welcome back{user ? `, ${user.first_name}` : ''}</p><h2 className="text-2xl font-bold">{page === 'stock' ? 'Inventory' : page === 'suppliers' ? 'Supplier management' : 'Operations dashboard'}</h2></div></div>
             {page === 'dashboard' ? <label className="flex w-full max-w-md items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500"><span aria-hidden="true">🔎</span><input className="w-full outline-none" placeholder="Search clients and inventory…" value={search} onChange={(event) => setSearch(event.target.value)} /></label> : null}
           </div>
         </header>
         <div className="dashboard-content">
           {error ? <div className="rounded-3xl border border-red-200 bg-red-50 p-5 text-red-700">{error}</div> : null}
           {loading ? <div className="rounded-3xl bg-white p-5 text-slate-500 shadow-sm">Loading live backend data…</div> : null}
-          {page === 'stock' ? <StockPage products={products} loading={loading} canAddStock={canAddStock} onStockAdded={loadProducts} /> : <><section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="dashboard">
+          {page === 'stock' ? <StockPage products={products} loading={loading} canAddStock={canAddStock} onStockAdded={loadProducts} /> : page === 'suppliers' ? <SuppliersPage canManage={user?.roles.some((role) => ['super_admin', 'director', 'manager'].includes(role)) ?? false} /> : <><section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="dashboard">
             <StatCard icon="💳" label="Revenue" value={money(dashboard?.metrics[0]?.value ?? 0)} hint={dashboard?.metrics[0]?.trend ?? 'Current period'} tone="green" />
             <StatCard icon="👥" label="Clients" value={String(clients.length)} hint="Recently active accounts" />
             <StatCard icon="📦" label="Low stock" value={String(lowStockCount)} hint="Products below minimum level" tone={lowStockCount ? 'red' : 'green'} />

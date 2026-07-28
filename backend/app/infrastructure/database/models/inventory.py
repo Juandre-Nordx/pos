@@ -10,6 +10,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    JSON,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,13 +35,54 @@ class Supplier(Base, AuditMixin):
     __tablename__ = "suppliers"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    contact_person: Mapped[str | None] = mapped_column(String(255))
     contact_email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(50))
+    alternative_phone: Mapped[str | None] = mapped_column(String(50))
+    website: Mapped[str | None] = mapped_column(String(500))
+    physical_address: Mapped[str | None] = mapped_column(Text)
+    billing_address: Mapped[str | None] = mapped_column(Text)
+    city: Mapped[str | None] = mapped_column(String(100))
+    province: Mapped[str | None] = mapped_column(String(100))
+    postal_code: Mapped[str | None] = mapped_column(String(20))
+    country: Mapped[str | None] = mapped_column(String(100))
+    registration_number: Mapped[str | None] = mapped_column(String(100))
     vat_number: Mapped[str | None] = mapped_column(String(50))
     payment_terms_days: Mapped[int] = mapped_column(default=30)
+    credit_limit: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"))
+    account_balance: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"))
+    bank_details: Mapped[dict | None] = mapped_column(JSON)
+    lead_time_days: Mapped[int] = mapped_column(default=0)
+    minimum_order_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"))
+    delivery_terms: Mapped[str | None] = mapped_column(Text)
+    product_categories: Mapped[list] = mapped_column(JSON, default=list)
+    notes: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     products: Mapped[list["Product"]] = relationship(back_populates="supplier")
+    contacts: Mapped[list["SupplierContact"]] = relationship(
+        back_populates="supplier", cascade="all, delete-orphan"
+    )
+
+
+class SupplierContact(Base, AuditMixin):
+    __tablename__ = "supplier_contacts"
+
+    supplier_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("suppliers.id", ondelete="CASCADE"), index=True
+    )
+    full_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    job_title: Mapped[str | None] = mapped_column(String(150))
+    department: Mapped[str | None] = mapped_column(String(150))
+    email: Mapped[str | None] = mapped_column(String(255), index=True)
+    phone: Mapped[str | None] = mapped_column(String(50), index=True)
+    alternative_phone: Mapped[str | None] = mapped_column(String(50))
+    preferred_contact_method: Mapped[str] = mapped_column(String(20), default="email")
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    supplier: Mapped["Supplier"] = relationship(back_populates="contacts")
 
 
 class Warehouse(Base, AuditMixin):

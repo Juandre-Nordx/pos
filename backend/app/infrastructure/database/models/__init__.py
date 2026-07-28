@@ -5,6 +5,7 @@ from app.infrastructure.database.models.inventory import (
     ProductCategory,
     StockMovement,
     Supplier,
+    SupplierContact,
     Warehouse,
     WarehouseStock,
 )
@@ -47,6 +48,7 @@ __all__ = [
     "RolePermission",
     "StockMovement",
     "Supplier",
+    "SupplierContact",
     "User",
     "UserRole",
     "Warehouse",

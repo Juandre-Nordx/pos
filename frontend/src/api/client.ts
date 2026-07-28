@@ -1,4 +1,4 @@
-import type { Client, CompanySettings, Dashboard, PPECompliance, PPEItem, Product, ResponseEnvelope, StockAddition, User } from '../types/api';
+import type { Client, CompanySettings, Dashboard, PPECompliance, PPEItem, Product, ResponseEnvelope, StockAddition, Supplier, SupplierCreate, User } from '../types/api';
 
 const RAILWAY_FRONTEND_HOST = 'pos-frontend-production.up.railway.app';
 const RAILWAY_BACKEND_URL = 'https://pos-production-62cf5.up.railway.app/api/v1';
@@ -126,4 +126,9 @@ export const api = {
     method: 'PUT',
     body: JSON.stringify(settings),
   }),
+  suppliers: (search = '') => request<Supplier[]>(`/suppliers?per_page=100${search ? `&search=${encodeURIComponent(search)}` : ''}`),
+  createSupplier: (supplier: SupplierCreate) => request<Supplier>('/suppliers', {
+    method: 'POST', body: JSON.stringify(supplier),
+  }),
+  deactivateSupplier: (uuid: string) => request<Supplier>(`/suppliers/${uuid}/deactivate`, { method: 'POST' }),
 };
