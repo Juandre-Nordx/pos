@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -74,3 +76,11 @@ async def health_check() -> ResponseEnvelope[HealthResponse]:
             timestamp=datetime.now(UTC),
         )
     )
+
+
+# Mount this after the API and health routes so the SPA cannot intercept API
+# requests. The directory is included in production images and intentionally
+# optional for backend-only local development and tests.
+frontend_directory = Path(__file__).resolve().parents[1] / "static"
+if frontend_directory.is_dir():
+    app.mount("/", StaticFiles(directory=frontend_directory, html=True), name="frontend")
